@@ -129,7 +129,42 @@ public final class DigitalOcean {
 		return "";
 	}
 
-	/**
+    static List<Image> getMatchingPrivateImages(String authToken, String imageName) throws DigitalOceanException, RequestUnsuccessfulException {
+        DigitalOceanClient client = new DigitalOceanClient(authToken);
+
+        List<Image> privateImages = new ArrayList<Image>();
+
+        Images images;
+        int page = 0;
+        int seen = 0;
+
+        do {
+            LOGGER.info("LOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOP");
+            page += 1;
+            images = client.getUserImages(page, Integer.MAX_VALUE);
+            for (Image image : images.getImages()) {
+                seen += 1;
+                if (!imageName.equals(image.getName())) {
+                    continue;
+                }
+                privateImages.add(image);
+            }
+
+            LOGGER.info("Total remotely known images: " +images.getMeta().getTotal() + " versus ours: " + seen);
+        }
+        while (images.getMeta().getTotal() > seen);
+
+        Collections.sort(privateImages, new Comparator<Image>() {
+            @Override
+            public int compare(Image left, Image right) {
+                return left.getCreatedDate().compareTo(right.getCreatedDate());
+            }
+        });
+
+        return privateImages;
+    }
+
+    /**
 	 * Returns the appropriate identifier for creating droplets from this image.
 	 * For non-snapshots, use the image ID instead of the slug (which isn't available
 	 * anyway) so that we can build images based upon backups.
@@ -140,7 +175,7 @@ public final class DigitalOcean {
 	static String getImageIdentifier(Image image) {
 		return image.getType() == ImageType.SNAPSHOT && image.getSlug() != null
 			? image.getSlug()
-			: image.getId().toString();
+			: image.getName();
 	}
 
 	/**
@@ -265,11 +300,22 @@ public final class DigitalOcean {
         return new DigitalOceanClient(authToken).getDropletInfo(dropletId);
     }
 
-    static Image newImage(String idOrSlug) {
+    static Image newImage(String authToken, String idOrSlug) {
         Image image;
+        Image privateImage;
 
         try {
-            image = new Image(Integer.parseInt(idOrSlug));
+            privateImage = getMatchingPrivateImages(authToken, idOrSlug).get(0);
+        } catch(Exception e) {
+            privateImage = null;
+        }
+
+        try {
+            if (privateImage != null) {
+                image = new Image(privateImage.getId());
+            } else {
+                image = new Image(Integer.parseInt(idOrSlug));
+            }
         }
         catch (NumberFormatException e) {
             image = new Image(idOrSlug);

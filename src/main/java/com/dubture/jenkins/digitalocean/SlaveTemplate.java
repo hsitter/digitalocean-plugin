@@ -191,7 +191,6 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         if (instanceCap == 0) {
             return false;
         }
-        LOGGER.log(Level.INFO, "slave limit check");
 
         int count = 0;
         List<Node> nodes = Jenkins.getInstance().getNodes();
@@ -201,11 +200,12 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
             }
         }
 
+        LOGGER.log(Level.INFO, "slave limit local check " + count + "/" + instanceCap + " " + (count >= instanceCap));
+
         return count >= instanceCap;
     }
 
     public boolean isInstanceCapReachedRemote(List<Droplet> droplets, String cloudName) throws DigitalOceanException {
-        LOGGER.log(Level.INFO, "slave limit check");
         int count = 0;
         for (Droplet droplet : droplets) {
             if ((droplet.isActive() || droplet.isNew())) {
@@ -214,6 +214,8 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
                 }
             }
         }
+
+        LOGGER.log(Level.INFO, "slave limit remote check " + count + "/" + instanceCap + " " + (count >= instanceCap));
 
         return count >= instanceCap;
     }
@@ -244,7 +246,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
             droplet.setName(dropletName);
             droplet.setSize(sizeId);
             droplet.setRegion(new Region(regionId));
-            droplet.setImage(DigitalOcean.newImage(imageId));
+            droplet.setImage(DigitalOcean.newImage(authToken, imageId));
             droplet.setKeys(newArrayList(new Key(sshKeyId)));
             droplet.setEnablePrivateNetworking(usePrivateNetworking);
             droplet.setInstallMonitoring(installMonitoringAgent);
@@ -432,6 +434,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
                 // so that we can build images based upon backups.
                 final String value = DigitalOcean.getImageIdentifier(image);
 
+                LOGGER.log(Level.INFO, "doFillImageIdItems {0} => {1}", new Object[] {entry.getKey(), value});
                 model.add(entry.getKey(), value);
             }
 

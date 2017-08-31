@@ -165,14 +165,15 @@ public class DigitalOceanCloud extends Cloud {
 
         int count = 0;
 
-        LOGGER.log(Level.INFO, "cloud limit check");
-
         List<Node> nodes = Jenkins.getInstance().getNodes();
         for (Node n : nodes) {
             if (DropletName.isDropletInstanceOfCloud(n.getDisplayName(), name)) {
                 count++;
             }
         }
+
+        LOGGER.log(Level.INFO, "cloud limit local check " + count + "/" + Math.min(instanceCap, getSlaveInstanceCap()) + " " + (count >= Math.min(instanceCap, getSlaveInstanceCap())));
+
 
         return count >= Math.min(instanceCap, getSlaveInstanceCap());
     }
@@ -181,8 +182,6 @@ public class DigitalOceanCloud extends Cloud {
 
         int count = 0;
 
-        LOGGER.log(Level.INFO, "cloud limit check");
-
         for (Droplet droplet : droplets) {
             if (droplet.isActive() || droplet.isNew()) {
                 if (DropletName.isDropletInstanceOfCloud(droplet.getName(), name)) {
@@ -190,6 +189,8 @@ public class DigitalOceanCloud extends Cloud {
                 }
             }
         }
+
+        LOGGER.log(Level.INFO, "cloud limit local remote " + count + "/" + Math.min(instanceCap, getSlaveInstanceCap()) + " " + (count >= Math.min(instanceCap, getSlaveInstanceCap())));
 
         return count >= Math.min(instanceCap, getSlaveInstanceCap());
     }
@@ -272,6 +273,7 @@ public class DigitalOceanCloud extends Cloud {
     public boolean canProvision(Label label) {
         synchronized (provisionSynchronizor) {
             try {
+                LOGGER.log(Level.INFO, "Looking for cloud template for label " + label.getDisplayName());
                 SlaveTemplate template = getTemplateBelowInstanceCapLocal(label);
                 if (template == null) {
                     LOGGER.log(Level.INFO, "No slaves could provision for label " + label.getDisplayName() + " because they either didn't support such a label or have reached the instance cap.");
