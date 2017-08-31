@@ -228,7 +228,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
                            Boolean usePrivateNetworking)
             throws IOException, RequestUnsuccessfulException, Descriptor.FormException {
 
-        LOGGER.log(Level.INFO, "Provisioning slave...");
+        LOGGER.log(Level.INFO, "Provisioning slave... " + dropletName);
 
         try {
             LOGGER.log(Level.INFO, "Starting to provision digital ocean droplet using image: " + imageId + " region: " + regionId + ", sizeId: " + sizeId);
