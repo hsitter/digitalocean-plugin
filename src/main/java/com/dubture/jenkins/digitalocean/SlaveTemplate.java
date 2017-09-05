@@ -28,6 +28,7 @@ package com.dubture.jenkins.digitalocean;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -131,6 +132,8 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
      */
     private final String initScript;
 
+    private LocalDateTime errorTime;
+
     private transient Set<LabelAtom> labelSet;
 
     private static final Logger LOGGER = Logger.getLogger(SlaveTemplate.class.getName());
@@ -182,6 +185,8 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
 
         this.userData = userData;
         this.initScript = initScript;
+
+        this.errorTime = null;
 
         readResolve();
     }
@@ -527,6 +532,19 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         return initScript;
     }
 
+    public Boolean isErroring() {
+        if (null == errorTime) {
+            return false;
+        }
+        final LocalDateTime now = LocalDateTime.now();
+        if (now.isAfter(errorTime.plusHours(1))) {
+            // If an hour has passed since the error, consider the template not broken again.
+            errorTime = null;
+            return false;
+        }
+        return true;
+    }
+
     public int getSshPort() {
         return sshPort;
     }
@@ -544,5 +562,9 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
     protected Object readResolve() {
         labelSet = Label.parse(labels);
         return this;
+    }
+
+    public String toString() {
+        return getName();
     }
 }
