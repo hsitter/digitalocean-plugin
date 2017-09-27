@@ -224,6 +224,13 @@ public class DigitalOceanCloud extends Cloud {
     public Collection<NodeProvisioner.PlannedNode> provision(final Label label, int excessWorkload) {
         synchronized (provisionSynchronizor) {
             List<NodeProvisioner.PlannedNode> provisioningNodes = new ArrayList<>();
+            LOGGER.log(Level.INFO,
+                    format("Provisioning for label %s (clouds: %d, nodes: %d, offline: %s); excess work: %d",
+                            label.getDisplayName(),
+                            label.getClouds().size(),
+                            label.getNodes().size(),
+                            label.isOffline(),
+                            excessWorkload));
             try {
                 while (excessWorkload > 0) {
 
@@ -276,7 +283,12 @@ public class DigitalOceanCloud extends Cloud {
     public boolean canProvision(Label label) {
         synchronized (provisionSynchronizor) {
             try {
-                LOGGER.log(Level.INFO, "Looking for cloud template for label " + label.getDisplayName());
+                LOGGER.log(Level.INFO,
+                        format("Looking for cloud template for label %s (clouds: %d, nodes: %d, offline: %s)",
+                                label.getDisplayName(),
+                                label.getClouds().size(),
+                                label.getNodes().size(),
+                                label.isOffline()));
                 SlaveTemplate template = getTemplateBelowInstanceCapLocal(label);
                 if (template == null) {
                     LOGGER.log(Level.INFO, "No slaves could provision for label " + label.getDisplayName() + " because they either didn't support such a label or have reached the instance cap.");
