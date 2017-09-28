@@ -278,12 +278,7 @@ public class Cloud extends hudson.slaves.Cloud {
     public boolean canProvision(Label label) {
         synchronized (provisionSynchronizor) {
             try {
-                LOGGER.log(Level.INFO,
-                        format("Looking for cloud template for label %s (clouds: %d, nodes: %d, offline: %s)",
-                                label.getDisplayName(),
-                                label.getClouds().size(),
-                                label.getNodes().size(),
-                                label.isOffline()));
+                LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + label.getDisplayName());
                 SlaveTemplate template = getTemplateBelowInstanceCapLocal(label);
                 if (template == null) {
                     LOGGER.log(Level.INFO, "No slaves could provision for label " + label.getDisplayName() + " because they either didn't support such a label or have reached the instance cap.");
