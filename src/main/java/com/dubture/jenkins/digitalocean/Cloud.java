@@ -215,6 +215,7 @@ public class Cloud extends hudson.slaves.Cloud {
      */
     @Override
     public Collection<NodeProvisioner.PlannedNode> provision(final Label label, int excessWorkload) {
+        LOGGER.log(Level.WARNING, "provision");
         synchronized (provisionSynchronizor) {
             LOGGER.log(Level.INFO,
                     format("Provisioning for label %s (clouds: %d, nodes: %d, offline: %s); excess work: %d",
@@ -276,6 +277,7 @@ public class Cloud extends hudson.slaves.Cloud {
 
     @Override
     public boolean canProvision(Label label) {
+        LOGGER.log(Level.WARNING, "canProvision " + label);
         synchronized (provisionSynchronizor) {
             try {
                 LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + label.getDisplayName());
@@ -294,11 +296,13 @@ public class Cloud extends hudson.slaves.Cloud {
                 return false;
             }
 
+            LOGGER.log(Level.WARNING, "canProvision " + label + " -> yes we can!");
             return true;
         }
     }
 
     public List<SlaveTemplate> getTemplates(Label label) {
+        LOGGER.log(Level.WARNING, "getTemplates");
         Comparator<SlaveTemplate> comp = new Comparator<SlaveTemplate>() {
             @Override
             public int compare(SlaveTemplate t1, SlaveTemplate t2) {
@@ -407,6 +411,7 @@ public class Cloud extends hudson.slaves.Cloud {
     }
 
     public int getSshKeyId() {
+        LOGGER.log(Level.WARNING, "getSSHKEYID");
         return sshKeyId;
     }
 
@@ -492,6 +497,9 @@ public class Cloud extends hudson.slaves.Cloud {
         }
 
         public FormValidation doCheckSshKeyId(@QueryParameter String authToken) {
+
+            LOGGER.log(Level.WARNING, "doCheckSshKeyId");
+
             return doCheckAuthToken(authToken);
         }
 
@@ -516,6 +524,8 @@ public class Cloud extends hudson.slaves.Cloud {
         }
 
         public ListBoxModel doFillSshKeyIdItems(@QueryParameter String authToken) throws RequestUnsuccessfulException, DigitalOceanException {
+            LOGGER.log(Level.WARNING, "doFillSshKeyIdItems " + authToken);
+
             ListBoxModel model = new ListBoxModel();
             if (authToken.isEmpty()) {
                 // Do not even attempt to list the keys if we know the authToken isn't going to work.

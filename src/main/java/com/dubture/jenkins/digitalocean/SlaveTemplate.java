@@ -28,11 +28,7 @@ package com.dubture.jenkins.digitalocean;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.SortedMap;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -44,7 +40,7 @@ import com.myjeeva.digitalocean.pojo.Droplet;
 import com.myjeeva.digitalocean.pojo.Image;
 import com.myjeeva.digitalocean.pojo.Key;
 import com.myjeeva.digitalocean.pojo.Region;
-import com.myjeeva.digitalocean.pojo.Size;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.Util;
@@ -56,12 +52,14 @@ import hudson.model.labels.LabelAtom;
 import hudson.slaves.NodeProperty;
 import hudson.util.FormValidation;
 import hudson.util.ListBoxModel;
+import hudson.util.XStream2;
 import jenkins.model.Jenkins;
 import org.jenkinsci.plugins.cloudstats.ProvisioningActivity;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
 import static com.google.common.collect.Lists.newArrayList;
+import static com.google.common.collect.Lists.newLinkedList;
 import static java.lang.String.format;
 
 /**
@@ -98,11 +96,6 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
     private final String imageId;
 
     /**
-     * The specified droplet sizeId.
-     */
-    private final String sizeId;
-
-    /**
      * The region for the droplet.
      */
     private final String regionId;
@@ -134,6 +127,16 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
 
     private static final Logger LOGGER = Logger.getLogger(SlaveTemplate.class.getName());
 
+    // Compatibility with old configs. We'll unmarshal the sizeId but then convert it to a dropletConfig in our
+    // ConverterImpl. Saves us from unmarshalling the entire object whilst still being fully backwards compatible.
+    private String sizeId = "";
+
+    private DropletConfig dropletConfig;
+    public DropletConfig getDropletConfig() { return dropletConfig; }
+
+    private final List<? extends DropletConfig> fallbackConfigs;
+    public List<DropletConfig> getFallbackConfigs() { return Collections.unmodifiableList(fallbackConfigs); }
+
     /**
      * Data is injected from the global Jenkins configuration via jelly.
      * @param imageId an image slug e.g. "debian-8-x64", or an integer e.g. of a backup, such as "12345678"
@@ -147,17 +150,24 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
      * @param initScript setup script to configure the slave
      */
     @DataBoundConstructor
-    public SlaveTemplate(String name, String imageId, String sizeId, String regionId, String username, String workspacePath,
+    public SlaveTemplate(String name, String imageId, DropletConfig dropletConfig, String regionId, String username, String workspacePath,
                          Integer sshPort, String idleTerminationInMinutes, String numExecutors, String labelString,
                          Boolean labellessJobsAllowed, String instanceCap, Boolean installMonitoring, String userData,
-                         String initScript) {
+                         String initScript, List<? extends DropletConfig> fallbackConfigs) {
 
         LOGGER.log(Level.INFO, "Creating SlaveTemplate with imageId = {0}, sizeId = {1}, regionId = {2}",
-                new Object[] { imageId, sizeId, regionId});
+                new Object[] { imageId, dropletConfig.getSizeId(), regionId});
 
         this.name = name;
         this.imageId = imageId;
-        this.sizeId = sizeId;
+
+        this.dropletConfig = dropletConfig;
+        if (fallbackConfigs == null) {
+            this.fallbackConfigs = Collections.emptyList();
+        } else {
+            this.fallbackConfigs = fallbackConfigs;
+        }
+
         this.regionId = regionId;
         this.username = username;
         this.workspacePath = workspacePath;
@@ -179,6 +189,27 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         readResolve();
     }
 
+
+    public static final class ConverterImpl extends XStream2.PassthruConverter<SlaveTemplate> {
+
+        public ConverterImpl(XStream2 xstream) {
+            super(xstream);
+        }
+
+        @Override
+        public boolean canConvert(Class type) {
+            return type == SlaveTemplate.class;
+        }
+
+        @Override
+        protected void callback(SlaveTemplate obj, UnmarshallingContext context) {
+            if (null != obj.sizeId && !obj.sizeId.isEmpty()) {
+                // Convert legacy sizeId to dropletConfig if present.
+                obj.dropletConfig = new DropletConfig(obj.sizeId);
+            }
+        }
+
+    }
 
     public boolean isInstanceCapReachedLocal(String cloudName) {
         if (instanceCap == 0) {
@@ -226,7 +257,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         LOGGER.log(Level.INFO, "Provisioning slave... " + dropletName);
 
         try {
-            LOGGER.log(Level.INFO, "Starting to provision digital ocean droplet using image: " + imageId + " region: " + regionId + ", sizeId: " + sizeId);
+            LOGGER.log(Level.INFO, "Starting to provision digital ocean droplet using image: " + imageId + " region: " + regionId + ", sizeId: " + dropletConfig.getSizeId());
 
             if (isInstanceCapReachedLocal(cloudName) || isInstanceCapReachedRemote(droplets, cloudName)) {
                 String msg = format("instance cap reached for %s in %s", dropletName, cloudName);
@@ -234,26 +265,72 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
                 throw new AssertionError(msg);
             }
 
-            // create a new droplet
-            Droplet droplet = new Droplet();
-            droplet.setName(dropletName);
-            droplet.setSize(sizeId);
-            droplet.setRegion(new Region(regionId));
-            droplet.setImage(DigitalOcean.newImage(authToken, imageId));
-            droplet.setKeys(newArrayList(new Key(sshKeyId)));
-            droplet.setEnablePrivateNetworking(usePrivateNetworking);
-            droplet.setInstallMonitoring(installMonitoringAgent);
-
-            if (!(userData == null || userData.trim().isEmpty())) {
-                droplet.setUserData(userData);
+            List<DropletConfig> configs = new ArrayList<DropletConfig>();
+            configs.add(dropletConfig);
+            for (DropletConfig c : getFallbackConfigs()) {
+                configs.add(c);
             }
+            LOGGER.log(Level.INFO, "built list");
+//            configs.addAll(getFallbackConfigs());
+            Iterator<DropletConfig> iterator = configs.iterator();
+            DropletConfig config = null;
+            LOGGER.log(Level.INFO, "going for a loopdy loop");
+            while(true) {
+                try {
+                    // Find a config which isn't in error state
+                    while (iterator.hasNext()) {
+                        LOGGER.log(Level.INFO, "  next!");
+                        config = iterator.next();
+                        if (!config.isErroring()) {
+                            break;
+                            // Break loop once we have a config which isn't in error state.
+                        }
+                        config = null;
+                    }
 
-            LOGGER.log(Level.INFO, "Creating slave with new droplet " + dropletName);
 
-            DigitalOceanClient apiClient = new DigitalOceanClient(authToken);
-            Droplet createdDroplet = apiClient.createDroplet(droplet);
+                    // FIXME: error tracking should be optional or if all are erroring go with the first.
+                    // or maybe we should go with the last, if all else fails.
+//                    if (null == config) {
+//                        throw new AssertionError("Found no droplet config which isn't in erroring state");
+//                    }
+                    LOGGER.log(Level.INFO, "done finding a not broken thing " +config.getSizeId());
 
-            return newSlave(provisioningId, cloudName, createdDroplet, privateKey);
+                    if (config.getSizeId().equals("c-2")) {
+                        throw new RuntimeException("testing error");
+                    }
+
+                    // create a new droplet
+                    Droplet droplet = new Droplet();
+                    droplet.setName(dropletName);
+                    droplet.setSize(config.getSizeId());
+                    droplet.setRegion(new Region(regionId));
+                    droplet.setImage(DigitalOcean.newImage(authToken, imageId));
+                    droplet.setKeys(newArrayList(new Key(sshKeyId)));
+                    droplet.setEnablePrivateNetworking(usePrivateNetworking);
+                    droplet.setInstallMonitoring(installMonitoringAgent);
+
+                    if (!(userData == null || userData.trim().isEmpty())) {
+                        droplet.setUserData(userData);
+                    }
+
+                    LOGGER.log(Level.INFO, "Creating slave with new droplet " + dropletName + " " + config.getSizeId());
+
+                    DigitalOceanClient apiClient = new DigitalOceanClient(authToken);
+                    Droplet createdDroplet = apiClient.createDroplet(droplet);
+
+                    return newSlave(provisioningId, cloudName, createdDroplet, privateKey);
+                } catch (Exception e) {
+                    // Unexpected error, continuing iteration unless we are at the end.
+                    config.setHadError();
+                    String msg = format("Unexpected error raised during provisioning of %s:\n%s", dropletName, e.getMessage());
+                    LOGGER.log(Level.WARNING,  msg, "got an error on config: " + config.getSizeId());
+                    LOGGER.log(Level.WARNING,  msg, e);
+                    if (!iterator.hasNext()) {
+                        throw e;
+                    }
+                }
+            }
         } catch (Exception e) {
             String msg = format("Unexpected error raised during provisioning of %s:\n%s", dropletName, e.getMessage());
             LOGGER.log(Level.WARNING,  msg, e);
@@ -391,28 +468,12 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
             return doCheckNonNegativeNumber(instanceCap);
         }
 
-        public FormValidation doCheckSizeId(@RelativePath("..") @QueryParameter String authToken) {
-            return Cloud.DescriptorImpl.doCheckAuthToken(authToken);
-        }
-
         public FormValidation doCheckImageId(@RelativePath("..") @QueryParameter String authToken) {
             return Cloud.DescriptorImpl.doCheckAuthToken(authToken);
         }
 
         public FormValidation doCheckRegionId(@RelativePath("..") @QueryParameter String authToken) {
             return Cloud.DescriptorImpl.doCheckAuthToken(authToken);
-        }
-
-        public ListBoxModel doFillSizeIdItems(@RelativePath("..") @QueryParameter String authToken) throws Exception {
-
-            List<Size> availableSizes = DigitalOcean.getAvailableSizes(authToken);
-            ListBoxModel model = new ListBoxModel();
-
-            for (Size size : availableSizes) {
-                model.add(DigitalOcean.buildSizeLabel(size), size.getSlug());
-            }
-
-            return model;
         }
 
         public ListBoxModel doFillImageIdItems(@RelativePath("..") @QueryParameter String authToken) throws Exception {
@@ -454,10 +515,6 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
 
     public String getName() {
         return name;
-    }
-
-    public String getSizeId() {
-        return sizeId;
     }
 
     public String getRegionId() {
