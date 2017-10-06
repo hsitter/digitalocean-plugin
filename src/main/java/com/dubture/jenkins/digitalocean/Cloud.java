@@ -135,7 +135,7 @@ public class Cloud extends hudson.slaves.Cloud {
             List<? extends SlaveTemplate> templates) {
         super(name);
 
-        LOGGER.log(Level.INFO, "Constructing new Cloud(name = {0}, <token>, <privateKey>, <keyId>, instanceCap = {1}, ...)", new Object[]{name, instanceCap});
+        LOGGER.log(Level.SEVERE, "Constructing new Cloud(name = {0}, <token>, <privateKey>, <keyId>, instanceCap = {1}, ...)", new Object[]{name, instanceCap});
 
         this.authToken = authToken;
         this.privateKey = privateKey;
@@ -442,7 +442,12 @@ public class Cloud extends hudson.slaves.Cloud {
     @Extension
     public static final class DescriptorImpl extends Descriptor<hudson.slaves.Cloud> {
 
+        private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
+
+
         public DescriptorImpl() {
+            super();
+            LOGGER.severe("reloading cloud config");
             load();
         }
 

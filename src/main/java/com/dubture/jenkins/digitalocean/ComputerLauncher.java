@@ -264,6 +264,7 @@ public class ComputerLauncher extends hudson.slaves.ComputerLauncher {
 
     private Connection connectToSsh(Computer computer, PrintStream logger) throws RequestUnsuccessfulException, DigitalOceanException {
 
+        LOGGER.warning("connecting to ssh " + computer.getName() );
         logger.println("connecting to ssh " + computer.getName() );
         final long timeout = TimeUnit2.MINUTES.toMillis(computer.getCloud().getTimeoutMinutes());
         final long startTime = System.currentTimeMillis();

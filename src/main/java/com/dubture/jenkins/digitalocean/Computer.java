@@ -52,6 +52,8 @@ public class Computer extends AbstractCloudComputer<Slave> implements TrackedIte
 
     public Computer(Slave slave) {
         super(slave);
+
+        LOGGER.info("computer created slave " + slave.getNodeName() + slave.getDropletId());
         this.slave = slave;
     }
 
