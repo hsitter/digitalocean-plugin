@@ -35,6 +35,9 @@ import hudson.slaves.AbstractCloudComputer;
 import org.jenkinsci.plugins.cloudstats.ProvisioningActivity;
 import org.jenkinsci.plugins.cloudstats.TrackedItem;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
@@ -53,6 +56,17 @@ public class DigitalOceanComputer extends AbstractCloudComputer<Slave> implement
 
     public DigitalOceanComputer(Slave slave) {
         super(slave);
+
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        Exception e = new Exception();
+        e.printStackTrace(pw);
+        String sStackTrace = sw.toString(); // stack trace as a string
+
+        LOGGER.log(Level.WARNING, sStackTrace);
+
+
+        LOGGER.info("computer created slave " + slave.getNodeName()  + " LOGGER is shit " + slave.getDropletId());
         this.slave = slave;
     }
 

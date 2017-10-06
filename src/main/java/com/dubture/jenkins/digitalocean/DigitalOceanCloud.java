@@ -469,8 +469,19 @@ public class DigitalOceanCloud extends Cloud {
     @Extension
     public static final class DescriptorImpl extends Descriptor<hudson.slaves.Cloud> {
 
+        private static final Logger LOGGER = Logger.getLogger(DescriptorImpl.class.getName());
+
+
         public DescriptorImpl() {
+            super();
+            LOGGER.severe("reloading cloud config");
             load();
+            LOGGER.severe("done reloading cloud config");
+            LOGGER.severe("clouds: " + Jenkins.getInstance().clouds.size());
+            for (hudson.slaves.Cloud c : Jenkins.getInstance().clouds) {
+                LOGGER.severe("cloud: " + c.getDisplayName());
+                LOGGER.severe("cloud: " + c.getClass().getName());
+                }
         }
 
         public String getDisplayName() {
