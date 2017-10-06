@@ -450,6 +450,7 @@ public class Cloud extends hudson.slaves.Cloud {
             LOGGER.severe("reloading cloud config");
             load();
             LOGGER.severe("done reloading cloud config");
+            LOGGER.severe("clouds: " + Jenkins.getInstance().clouds.size());
             for (hudson.slaves.Cloud c : Jenkins.getInstance().clouds) {
                 LOGGER.severe("cloud: " + c.getDisplayName());
                 LOGGER.severe("cloud: " + c.getClass().getName());
