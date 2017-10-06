@@ -25,6 +25,7 @@
 package com.dubture.jenkins.digitalocean;
 
 import com.myjeeva.digitalocean.pojo.Size;
+import com.thoughtworks.xstream.annotations.XStreamOmitField;
 import hudson.Extension;
 import hudson.RelativePath;
 import hudson.model.Describable;
@@ -53,6 +54,7 @@ public class DropletConfig implements Describable<DropletConfig> {
         this.sizeId = sizeId;
     }
 
+    @XStreamOmitField
     private LocalDateTime errorTime;
 
     @DataBoundConstructor
