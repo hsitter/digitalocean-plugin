@@ -64,6 +64,7 @@ public class DropletConfig implements Describable<DropletConfig> {
     }
 
     public void setHadError() {
+        LOGGER.info("now in error state " + sizeId);
         this.errorTime = LocalDateTime.now();
     }
 
