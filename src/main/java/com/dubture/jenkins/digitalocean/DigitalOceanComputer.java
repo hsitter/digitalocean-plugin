@@ -49,35 +49,29 @@ public class DigitalOceanComputer extends AbstractCloudComputer<Slave> implement
 
     private static final Logger LOGGER = Logger.getLogger(DigitalOceanComputer.class.getName());
 
-    private final ProvisioningActivity.Id provisioningId;
-
-    private final String authToken;
-
-    private final Integer dropletId;
+    private final Slave slave;
 
     public DigitalOceanComputer(Slave slave) {
         super(slave);
-        provisioningId = slave.getId();
-        dropletId = slave.getDropletId();
-        authToken = slave.getCloud().getAuthToken();
+        this.slave = slave;
     }
 
     public Droplet updateInstanceDescription() throws RequestUnsuccessfulException, DigitalOceanException {
-        DigitalOceanClient apiClient = new DigitalOceanClient(authToken);
-        return apiClient.getDropletInfo(dropletId);
+        DigitalOceanClient apiClient = new DigitalOceanClient(slave.getCloud().getAuthToken());
+        return apiClient.getDropletInfo(slave.getDropletId());
     }
 
     @Override
     protected void onRemoved() {
         super.onRemoved();
 
-        LOGGER.info("Slave removed, deleting droplet " + dropletId);
-        DigitalOcean.tryDestroyDropletAsync(authToken, dropletId);
+        LOGGER.info("Slave removed, deleting droplet " + slave.getDropletId());
+        DigitalOcean.tryDestroyDropletAsync(slave.getCloud().getAuthToken(), slave.getDropletId());
     }
 
     @Override
     public ProvisioningActivity.Id getId() {
-        return provisioningId;
+        return slave.getId();
     }
 
     @SuppressFBWarnings(
