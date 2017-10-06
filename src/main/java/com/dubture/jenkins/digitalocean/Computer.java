@@ -65,7 +65,7 @@ public class Computer extends AbstractCloudComputer<Slave> implements TrackedIte
         LOGGER.log(Level.WARNING, sStackTrace);
 
 
-        LOGGER.info("computer created slave " + slave.getNodeName() + slave.getDropletId());
+        LOGGER.info("computer created slave " + slave.getNodeName()  + " LOGGER is shit " + slave.getDropletId());
         this.slave = slave;
     }
 
