@@ -449,6 +449,7 @@ public class Cloud extends hudson.slaves.Cloud {
             super();
             LOGGER.severe("reloading cloud config");
             load();
+            LOGGER.severe("done reloading cloud config");
         }
 
         public String getDisplayName() {
