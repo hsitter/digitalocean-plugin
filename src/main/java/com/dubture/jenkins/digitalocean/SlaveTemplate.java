@@ -285,16 +285,11 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
                             break;
                             // Break loop once we have a config which isn't in error state.
                         }
-                        config = null;
                     }
+                    // If we found no !erroring config we'll have the last config here. This is the final
+                    // fallback and we'll simply assume it works no matter what.
 
-
-                    // FIXME: error tracking should be optional or if all are erroring go with the first.
-                    // or maybe we should go with the last, if all else fails.
-//                    if (null == config) {
-//                        throw new AssertionError("Found no droplet config which isn't in erroring state");
-//                    }
-                    LOGGER.log(Level.INFO, "done finding a not broken thing " +config.getSizeId());
+                    LOGGER.log(Level.INFO, "done finding a not broken thing " + config.getSizeId());
 
                     if (config.getSizeId().equals("c-2")) {
                         throw new RuntimeException("testing error");
