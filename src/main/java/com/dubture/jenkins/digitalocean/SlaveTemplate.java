@@ -329,7 +329,7 @@ public class SlaveTemplate implements Describable<SlaveTemplate> {
         } catch (Exception e) {
             String msg = format("Unexpected error raised during provisioning of %s:\n%s", dropletName, e.getMessage());
             LOGGER.log(Level.WARNING,  msg, e);
-            throw new AssertionError(msg);
+            throw new AssertionError(msg, e);
         }
     }
 
