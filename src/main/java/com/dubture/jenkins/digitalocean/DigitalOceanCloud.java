@@ -222,7 +222,7 @@ public class DigitalOceanCloud extends Cloud {
      */
     @Override
     public Collection<NodeProvisioner.PlannedNode> provision(final Label label, int excessWorkload) {
-        LOGGER.log(Level.WARNING, "provision");
+        LOGGER.log(Level.INFO, "provision");
         synchronized (provisionSynchronizor) {
             List<NodeProvisioner.PlannedNode> provisioningNodes = new ArrayList<>();
             LOGGER.log(Level.INFO,
@@ -282,7 +282,7 @@ public class DigitalOceanCloud extends Cloud {
 
     @Override
     public boolean canProvision(Label label) {
-        LOGGER.log(Level.WARNING, "canProvision " + label);
+        LOGGER.log(Level.INFO, "canProvision " + label);
         synchronized (provisionSynchronizor) {
             try {
                 LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + label.getDisplayName());
@@ -301,13 +301,13 @@ public class DigitalOceanCloud extends Cloud {
                 return false;
             }
 
-            LOGGER.log(Level.WARNING, "canProvision " + label + " -> yes we can!");
+            LOGGER.log(Level.INFO, "canProvision " + label + " -> yes we can!");
             return true;
         }
     }
 
     private List<SlaveTemplate> getTemplates(Label label) {
-        LOGGER.log(Level.WARNING, "getTemplates");
+        LOGGER.log(Level.INFO, "getTemplates");
         Comparator<SlaveTemplate> comp = new Comparator<SlaveTemplate>() {
             @Override
             public int compare(SlaveTemplate t1, SlaveTemplate t2) {
@@ -415,7 +415,7 @@ public class DigitalOceanCloud extends Cloud {
     }
 
     public int getSshKeyId() {
-        LOGGER.log(Level.WARNING, "getSSHKEYID");
+        LOGGER.log(Level.INFO, "getSSHKEYID");
         return sshKeyId;
     }
 
@@ -536,7 +536,7 @@ public class DigitalOceanCloud extends Cloud {
 
         public FormValidation doCheckSshKeyId(@QueryParameter String authToken) {
 
-            LOGGER.log(Level.WARNING, "doCheckSshKeyId");
+            LOGGER.log(Level.INFO, "doCheckSshKeyId");
 
             return doCheckAuthToken(authToken);
         }
@@ -562,7 +562,7 @@ public class DigitalOceanCloud extends Cloud {
         }
 
         public ListBoxModel doFillSshKeyIdItems(@QueryParameter String authToken) throws RequestUnsuccessfulException, DigitalOceanException {
-            LOGGER.log(Level.WARNING, "doFillSshKeyIdItems " + authToken);
+            LOGGER.log(Level.INFO, "doFillSshKeyIdItems " + authToken);
 
             ListBoxModel model = new ListBoxModel();
             if (authToken.isEmpty()) {
