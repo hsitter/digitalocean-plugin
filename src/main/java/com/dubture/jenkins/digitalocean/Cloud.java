@@ -135,7 +135,7 @@ public class Cloud extends hudson.slaves.Cloud {
             List<? extends SlaveTemplate> templates) {
         super(name);
 
-        LOGGER.log(Level.SEVERE, "Constructing new Cloud(name = {0}, <token>, <privateKey>, <keyId>, instanceCap = {1}, ...)", new Object[]{name, instanceCap});
+        LOGGER.log(Level.INFO, "Constructing new Cloud(name = {0}, <token>, <privateKey>, <keyId>, instanceCap = {1}, ...)", new Object[]{name, instanceCap});
 
         this.authToken = authToken;
         this.privateKey = privateKey;
@@ -215,7 +215,7 @@ public class Cloud extends hudson.slaves.Cloud {
      */
     @Override
     public Collection<NodeProvisioner.PlannedNode> provision(final Label label, int excessWorkload) {
-        LOGGER.log(Level.WARNING, "provision");
+        LOGGER.log(Level.INFO, "provision");
         synchronized (provisionSynchronizor) {
             LOGGER.log(Level.INFO,
                     format("Provisioning for label %s (clouds: %d, nodes: %d, offline: %s); excess work: %d",
@@ -277,7 +277,7 @@ public class Cloud extends hudson.slaves.Cloud {
 
     @Override
     public boolean canProvision(Label label) {
-        LOGGER.log(Level.WARNING, "canProvision " + label);
+        LOGGER.log(Level.INFO, "canProvision " + label);
         synchronized (provisionSynchronizor) {
             try {
                 LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + label.getDisplayName());
@@ -296,13 +296,13 @@ public class Cloud extends hudson.slaves.Cloud {
                 return false;
             }
 
-            LOGGER.log(Level.WARNING, "canProvision " + label + " -> yes we can!");
+            LOGGER.log(Level.INFO, "canProvision " + label + " -> yes we can!");
             return true;
         }
     }
 
     public List<SlaveTemplate> getTemplates(Label label) {
-        LOGGER.log(Level.WARNING, "getTemplates");
+        LOGGER.log(Level.INFO, "getTemplates");
         Comparator<SlaveTemplate> comp = new Comparator<SlaveTemplate>() {
             @Override
             public int compare(SlaveTemplate t1, SlaveTemplate t2) {
@@ -411,7 +411,7 @@ public class Cloud extends hudson.slaves.Cloud {
     }
 
     public int getSshKeyId() {
-        LOGGER.log(Level.WARNING, "getSSHKEYID");
+        LOGGER.log(Level.INFO, "getSSHKEYID");
         return sshKeyId;
     }
 
@@ -509,7 +509,7 @@ public class Cloud extends hudson.slaves.Cloud {
 
         public FormValidation doCheckSshKeyId(@QueryParameter String authToken) {
 
-            LOGGER.log(Level.WARNING, "doCheckSshKeyId");
+            LOGGER.log(Level.INFO, "doCheckSshKeyId");
 
             return doCheckAuthToken(authToken);
         }
@@ -535,7 +535,7 @@ public class Cloud extends hudson.slaves.Cloud {
         }
 
         public ListBoxModel doFillSshKeyIdItems(@QueryParameter String authToken) throws RequestUnsuccessfulException, DigitalOceanException {
-            LOGGER.log(Level.WARNING, "doFillSshKeyIdItems " + authToken);
+            LOGGER.log(Level.INFO, "doFillSshKeyIdItems " + authToken);
 
             ListBoxModel model = new ListBoxModel();
             if (authToken.isEmpty()) {

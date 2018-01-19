@@ -62,7 +62,7 @@ public class Computer extends AbstractCloudComputer<Slave> implements TrackedIte
         e.printStackTrace(pw);
         String sStackTrace = sw.toString(); // stack trace as a string
 
-        LOGGER.log(Level.WARNING, sStackTrace);
+        LOGGER.log(Level.INFO, sStackTrace);
 
 
         LOGGER.info("computer created slave " + slave.getNodeName()  + " LOGGER is shit " + slave.getDropletId());
