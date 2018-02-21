@@ -62,6 +62,12 @@
 
     <f:validateButton title="Test connection" progress="Testing API connectivity..." method="testConnection" with="authToken"/>
 
+    <!--<f:entry title="Droplets" description="List of droplets which can be launched as slaves">-->
+        <!--<f:repeatable field="templates">-->
+            <!--<st:include page="/com/dubture/jenkins/digitalocean/SlaveTemplate/config.jelly" class="com.dubture.jenkins.digitalocean.SlaveTemplate$DescriptorImpl"/>-->
+        <!--</f:repeatable>-->
+    <!--</f:entry>-->
+
     <f:entry title="Droplets" description="List of droplets which can be launched as slaves">
         <!-- Defines a header so the repeats can be re-ordered -->
         <f:repeatableProperty field="templates" header="Droplet">

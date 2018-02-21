@@ -3,6 +3,7 @@
   ~
   ~ Copyright (c) 2014 robert.gruendler@dubture.com
   ~               2016 Maxim Biro <nurupo.contributions@gmail.com>
+  ~               2017 Harald Sitter <sitter@kde.org>
   ~
   ~ Permission is hereby granted, free of charge, to any person obtaining a copy
   ~ of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +26,7 @@
 
 <?jelly escape-by-default='true'?>
 
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
 
     <f:entry title="Unique name" field="name">
         <f:textbox/>
@@ -35,8 +36,16 @@
         <f:select />
     </f:entry>
 
-    <f:entry title="Size" field="sizeId">
-        <f:select />
+        <f:property field="dropletConfig"/>
+
+        <f:entry>
+            <f:repeatableProperty field="fallbackConfigs" header="Fallback Size">
+                <f:entry title="">
+                    <div align="right">
+                        <f:repeatableDeleteButton/>
+                    </div>
+                </f:entry>
+            </f:repeatableProperty>
     </f:entry>
 
     <f:entry title="Region" field="regionId">
