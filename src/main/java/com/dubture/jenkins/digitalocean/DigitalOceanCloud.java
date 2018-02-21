@@ -59,6 +59,9 @@ import org.jenkinsci.plugins.cloudstats.TrackedPlannedNode;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
+import java.util.*;
+import static java.lang.String.format;
+
 /**
  * The {@link DigitalOceanCloud} contains the main configuration values for running
  * slaves on DigitalOcean, e.g. apiKey/clientId to connect to the API.
@@ -294,8 +297,50 @@ public class DigitalOceanCloud extends Cloud {
     }
 
     private List<SlaveTemplate> getTemplates(Label label) {
-        List<SlaveTemplate> matchingTemplates = new ArrayList<>();
+        Comparator<SlaveTemplate> comp = new Comparator<SlaveTemplate>() {
+            @Override
+            public int compare(SlaveTemplate t1, SlaveTemplate t2) {
+                if (t1.isErroring()) {
+                    return -1;
+                }
+                if (t2.isErroring()) {
+                    return 1;
+                }
 
+                String name1 = t1.getName();
+                String name2 = t2.getName();
+                if (name1.equals(name2)) {
+                    return 0;
+                }
+                if (name1.startsWith("c.") && !name2.startsWith("c.")) {
+                    return 1; // t1 is a high-cpu, t2 is not
+                }
+                if (!name1.startsWith("c.") && name2.startsWith("c.")) {
+                    return -1; // t1 is not high-cpu, t2 is
+                }
+                // Loop through core labels in order. Above we've made sure equality is taken care of and cases where
+                // one side is high-cpu but the other is not. So we only have all high-cpu or none. Run through them
+                // if either side is a known high-cpu score it. As this is in order any side being 16core will
+                // result in a score, if we check core8 neither has been core16 so they are all strictly less.
+                for (String name : new String[] { "c.16core.build.neon", "c.8core.build.neon", "c.4core.build.neon"}) {
+                    if (name1.equals(name)) {
+                        return 1; // t1 is a better high-cpu
+                    }
+                    if (name2.equals(name)) {
+                        return -1; // t2 is a better high-cpu
+                    }
+                }
+                if (t1.isLabellessJobsAllowed() && !t2.isLabellessJobsAllowed()) {
+                    return -1; // t1 is label-less, makes it worth less
+                }
+                if (!t1.isLabellessJobsAllowed() && t2.isLabellessJobsAllowed()) {
+                    return 1; // t1 is not label-less, makes it worth more
+                }
+                return name1.compareTo(name2);
+            }
+        };
+
+        List<SlaveTemplate> matchingTemplates = new ArrayList<SlaveTemplate>();
         for (SlaveTemplate t : templates) {
             if ((label == null && t.getLabelSet().size() == 0) ||
                     (label == null && t.isLabellessJobsAllowed()) ||
@@ -303,6 +348,13 @@ public class DigitalOceanCloud extends Cloud {
                 matchingTemplates.add(t);
             }
         }
+        Collections.sort(matchingTemplates, comp);
+        Collections.reverse(matchingTemplates);
+
+        LOGGER.log(Level.INFO,
+                format("Templates for %s: %s", label.getName(), Arrays.toString(matchingTemplates.toArray())));
+
+//        Collections.reverse(matchingTemplates);
 
         return matchingTemplates;
     }
