@@ -261,8 +261,8 @@ public class DigitalOceanCloud extends Cloud {
                             }
                             slave = template.provision(provisioningId, dropletName, name, authToken, privateKey,
                                     sshKeyId, droplets1, usePrivateNetworking);
+                            Jenkins.getInstance().addNode(slave);
                         }
-                        Jenkins.getInstance().addNode(slave);
                         slave.toComputer().connect(false).get();
                         return slave;
                     })));
@@ -283,17 +283,19 @@ public class DigitalOceanCloud extends Cloud {
     @Override
     public boolean canProvision(Label label) {
         LOGGER.log(Level.INFO, "canProvision " + label);
+        String displayName = label.getDisplayName();
         synchronized (provisionSynchronizor) {
             try {
-                LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + label.getDisplayName());
+                LOGGER.log(Level.INFO,"inside try");
+                LOGGER.log(Level.INFO,"Looking for cloud template for label %s" + displayName);
                 SlaveTemplate template = getTemplateBelowInstanceCapLocal(label);
                 if (template == null) {
-                    LOGGER.log(Level.INFO, "No slaves could provision for label " + label.getDisplayName() + " because they either didn't support such a label or have reached the instance cap.");
+                    LOGGER.log(Level.INFO, "No slaves could provision for label " + displayName + " because they either didn't support such a label or have reached the instance cap.");
                     return false;
                 }
 
                 if (isInstanceCapReachedLocal()) {
-                    LOGGER.log(Level.INFO, "Instance cap of " + getInstanceCap() + " reached, not provisioning for label " + label.getDisplayName() + ".");
+                    LOGGER.log(Level.INFO, "Instance cap of " + getInstanceCap() + " reached, not provisioning for label " + displayName + ".");
                     return false;
                 }
             } catch (Exception e) {
