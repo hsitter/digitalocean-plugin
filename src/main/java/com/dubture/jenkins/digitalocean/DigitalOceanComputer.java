@@ -57,15 +57,6 @@ public class DigitalOceanComputer extends AbstractCloudComputer<Slave> implement
     public DigitalOceanComputer(Slave slave) {
         super(slave);
 
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        Exception e = new Exception();
-        e.printStackTrace(pw);
-        String sStackTrace = sw.toString(); // stack trace as a string
-
-        LOGGER.log(Level.INFO, sStackTrace);
-
-
         LOGGER.info("computer created slave " + slave.getNodeName()  + " LOGGER is shit " + slave.getDropletId());
         this.slave = slave;
     }
