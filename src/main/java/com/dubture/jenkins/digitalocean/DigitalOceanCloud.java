@@ -249,6 +249,7 @@ public class DigitalOceanCloud extends Cloud {
                     final String dropletName = DropletName.generateDropletName(name, template.getName());
 
                     final ProvisioningActivity.Id provisioningId = new ProvisioningActivity.Id(this.name, template.getName(), dropletName);
+                    LOGGER.log(Level.INFO, "Planning node for " + provisioningId.toString());
                     provisioningNodes.add(new TrackedPlannedNode(provisioningId, template.getNumExecutors(), Computer.threadPoolForRemoting.submit(() -> {
                         Slave slave;
                         synchronized (provisionSynchronizor) {
