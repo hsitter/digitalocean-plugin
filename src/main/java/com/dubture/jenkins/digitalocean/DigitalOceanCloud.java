@@ -177,7 +177,6 @@ public class DigitalOceanCloud extends Cloud {
 
         LOGGER.log(Level.INFO, "cloud limit local check " + count + "/" + Math.min(instanceCap, getSlaveInstanceCap()) + " " + (count >= Math.min(instanceCap, getSlaveInstanceCap())));
 
-
         return count >= Math.min(instanceCap, getSlaveInstanceCap());
     }
 
