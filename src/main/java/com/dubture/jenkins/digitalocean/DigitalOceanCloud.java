@@ -306,7 +306,6 @@ public class DigitalOceanCloud extends Cloud {
                 if (t2.isErroring()) {
                     return 1;
                 }
-
                 String name1 = t1.getName();
                 String name2 = t2.getName();
                 if (name1.equals(name2)) {
@@ -339,7 +338,6 @@ public class DigitalOceanCloud extends Cloud {
                 return name1.compareTo(name2);
             }
         };
-
         List<SlaveTemplate> matchingTemplates = new ArrayList<SlaveTemplate>();
         for (SlaveTemplate t : templates) {
             if ((label == null && t.getLabelSet().size() == 0) ||
