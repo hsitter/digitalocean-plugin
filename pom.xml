@@ -7,7 +7,7 @@
     </parent>
     <groupId>com.dubture.jenkins</groupId>
     <artifactId>digitalocean-plugin</artifactId>
-    <version>1.2-SNAPSHOT</version>
+    <version>1.1.2-SNAPSHOT</version>
     <packaging>hpi</packaging>
     <name>DigitalOcean plugin</name>
     <url>https://wiki.jenkins-ci.org/display/JENKINS/DigitalOcean+Plugin</url>
@@ -47,7 +47,7 @@
     <repositories>
         <repository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </repository>
         <repository>
             <id>oss-sonatype</id>
@@ -57,7 +57,7 @@
     <pluginRepositories>
         <pluginRepository>
             <id>repo.jenkins-ci.org</id>
-            <url>http://repo.jenkins-ci.org/public/</url>
+            <url>https://repo.jenkins-ci.org/public/</url>
         </pluginRepository>
     </pluginRepositories>
     <dependencies>
